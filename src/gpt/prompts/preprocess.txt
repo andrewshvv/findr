@@ -1,0 +1,19 @@
+Your task as an AI text assistant is to analyze job postings on Telegram. Your report should be presented as a JSON dictionary containing the following fields:
+
+- "category" (string): Set one of the following categories: one_job_description, multiple_jobs_opportunities, scholarship, hackathon, resume, study_program, sprint_event, advertisement. The category should always be present;
+
+- "closed" (boolean): Is the job vacancy closed? If unclear, indicate with false;
+
+- "language" (string): State the language, either 'ru' or 'en'. This should be written in lowercase;
+
+- "external" list(dict(str,str,str,str)): Given the external list of dict populate it with additional fields, so that dictionary had the following structure. If you have found some additional external data, like phones, and contacts, which are not in metadata add a new dictionary.
+{
+    "type" (string, required): One of the following "contact_phone", "contact_email", "contact_telegram", "channel", "form", "project", "company", "job_platform", "job_link_on_company_website". Job platform usually links on websites like "gkjb", "geekjob", "habr", "habrahabr", "hh", "telegra", "vseti", "linkedin", "careerspace".
+    "link" (string, required): populate from metadata
+    "link_text": Exact link text.
+    "description" (string, required): One of the following "Ссылка на компанию", "Ссылка на вакансию", "Ссылка на проект", "Ссылка на форму", "Контакт в Telegram", "Контактный телефон", "Контактый email", "Контактый телефон", or your own if all of this descriptions are not suitable.
+}
+
+Be super careful to look for telegram nicknames and other 'contact' links.
+
+- "section_headers" list(string): Extract section headers from the job description. Exact short text extracted from the job description.  Headers are short text fragments that indicate the start of a new section or topic in the job description. They are usually written in bold or with a larger font size to draw attention and make the content more organized and easier to navigate. Headers provide a quick overview of the main points covered in each section of the job description.

@@ -1,0 +1,87 @@
+Software Development Engineer
+Specializations:
+Programmer, developer
+Employment: full time, part time, project work
+
+Work schedule: full day, shift schedule, flexible schedule, remote working
+
+Work experience 6 years 9 months
+November 2018 — currently
+4 years 9 months
+MICROSOFT Corporation
+www.microsoft.com/Rus/careers/
+
+IT, System Integration, Internet
+
+Software Development
+System Integration, Technological and Business Processes Automation, IT Consulting
+Software Developer
+Development of Micrusosoft Dynamics Business Central SMB
+
+Stack: .NET, React, TypeScript, Script#;
+Tools: VS Test Tools, Selenium WebDriver, dotTrace;
+Infrastructure: Azure DevOps, Git, Power-Shell, Visual Studio, VS Code.
+November 2016 — november 2018
+2 years 1 month
+Norsi-Trans
+Moscow, norsi-trans.ru
+
+IT, System Integration, Internet... Show more
+
+Software Developer
+Development of unix modules for distributed software.
+
+Stack: C++11 and C++14, cURL, .NET, VLC.DotNet, NAudio library for .NET;
+Tools: CMake;
+Infrastructure: Debian and Ubuntu, QT Creator, Bash, Git, SSH, FTP.
+Key skills
+Python
+C++
+SQL
+Linux
+Time management
+Git
+C#
+Leadership Skills
+Multithread Programming
+Shell Scripting
+.NET Framework
+Analytical skills
+MS Visual Studio
+Bash
+Unix
+Visual Studio C#
+Mathematical Statistics
+Driving experience
+Driver's license category B
+About me
+Being a competent IT professional with a successful scientific development and commercial production experience, I`m initiative and creativity-driven individual with a great passion for solving complicated tasks.
+
+I`m looking for an ability to apply my skills for developing scalable high-available distributed applications, to participate in creation of system architecture and infrastructure, to take advantage of the wide range of communication opportunities in an international company.
+Higher education (master)
+2019
+National Research University 'Higher School of Economics', Moscow
+Department of Physics, Applied Mathematics and Physics
+2017
+Moscow Lomonosov State University, Moscow
+Department of Physics, Applied Mathematics and Physics
+Languages
+Russian — Native
+
+
+English — C1 — Advanced
+
+
+Professional development, courses
+2018
+Machine Learning
+MAIL.RU GROUP, Машинное обучение
+2016
+Ideology of the leader
+Radislav Gandapas, Управление
+Citizenship, travel time to work
+Citizenship: Russia
+
+Permission to work: Russia
+
+Desired travel time to work: doesn't matter

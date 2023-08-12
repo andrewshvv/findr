@@ -1,0 +1,1 @@
+Analyze job description text for relevance, excluding promotions, links, or calls to action. If uncertain, default to false. Respond in JSON with {"result": true / false}.

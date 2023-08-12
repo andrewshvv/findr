@@ -1,0 +1,65 @@
+# Python
+*.py[cod]
+*.pyo
+*.pyd
+*~
+
+# Mac OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# PyCharm
+.idea/
+*.iml
+
+# Sqlite
+*.sqlite
+*.sqlite-journal
+
+# Telethon
+*.session-journal
+*.session
+
+
+# Embedding database
+*chroma
+
+# Parsing
+geckodriver.log
+
+# Distribution / packaging
+.Python
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+.nox/
+.pytest_cache/
+.coverage/
+pytestdebug.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment Variables
+.env
+.env.*

@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  jobsearch:
+    image: "jobsearch"
+    env_file:
+      - .env
+    build: .
+    volumes:
+      - ./telegram.session:/app/telegram.session
+      - ./db.sqlite:/app/db.sqlite
+      - ./chroma:/app/chroma

@@ -1,0 +1,11 @@
+schema = {
+    "type": "object",
+    "properties": {
+        "result": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "result"
+    ]
+}
