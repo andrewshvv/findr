@@ -19,8 +19,13 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Build and push Docker images
+        id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/findr:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/my-image-name:latest
+
+      - name: Update GitHub environment
+        run: |
+          echo "IMAGE_ID=${{ steps.docker_build.outputs.digest }}" >> $GITHUB_ENV
