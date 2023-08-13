@@ -89,6 +89,8 @@ class SomeService(aiomisc.Service):
 # finally:
 #     logging.shutdown()
 
+# test force push
+
 # from pyee import AsyncIOEventEmitter
 #
 #
