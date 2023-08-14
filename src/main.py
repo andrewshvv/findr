@@ -33,6 +33,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.WARNING)
 logging.getLogger("telethon").setLevel(logging.INFO)
 logging.getLogger("chromadb.segment.impl.vector.local_persistent_hnsw").setLevel(logging.ERROR)
+logging.getLogger("chromadb.segment.impl.vector.brute_force_index").setLevel(logging.ERROR)
 logging.getLogger(__name__).setLevel(logging.INFO)
 
 
