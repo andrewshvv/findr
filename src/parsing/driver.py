@@ -27,7 +27,10 @@ def setup_driver():
     options.add_argument("--window-size=1920,1080")
     options.add_argument(f"--user-agent={ua.random}")
     driver = webdriver.Firefox(
-        service=Service(executable_path=GECKO_DRIVER_PATH),
+        service=Service(
+            executable_path=GECKO_DRIVER_PATH,
+            log_path=os.path.devnull
+        ),
         options=options
     )
     driver.set_page_load_timeout(60)
