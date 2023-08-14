@@ -6,7 +6,6 @@ import coloredlogs
 import requests
 from dotenv import load_dotenv
 from fabric import Connection, task
-from invoke import Context
 
 load_dotenv()
 
@@ -151,13 +150,13 @@ def start_daemon(conn: Connection):
     # pull the latest images and run
     with conn.cd(DOCKER_HOME):
         conn.run(f"docker pull {DOCKER_HUB_REPO_IMAGE}:latest")
-        conn.run("docker-compose up -d findr")
+        conn.run("docker compose up -d findr")
 
 @task
 def stop_daemon(ctx):
     conn = connect()
     with conn.cd(DOCKER_HOME):
-        conn.run("docker-compose down")
+        conn.run("docker compose down")
 
 
 @task
@@ -165,7 +164,7 @@ def logs(ctx, conn=None, service="findr"):
     if not conn:
         conn = connect()
     with conn.cd(DOCKER_HOME):
-        conn.run(f"docker-compose logs --follow --tail 50 {service}")
+        conn.run(f"docker compose logs --follow --tail 50 {service}")
 
 
 @task
