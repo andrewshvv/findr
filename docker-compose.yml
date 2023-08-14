@@ -1,7 +1,7 @@
 version: '3.7'
 services:
-  jobsearch:
-    image: "jobsearch"
+  findr:
+    image: andrewsamokhvalov/findr:latest
     env_file:
       - .env
     build: .
