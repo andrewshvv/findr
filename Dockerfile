@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --n
 # as if it compiles for the wrong acrhitecture
 # TODO: Need to revisit
 RUN CHROMA_HNSWLIB_VERSION=$(poetry show -v | grep chroma-hnswlib | awk '{print $2}') &&  \
-    poetry run pip uninstall chroma-hnswlib &&  \
+    poetry run pip uninstall -y chroma-hnswlib &&  \
     poetry run pip install chroma-hnswlib=="${CHROMA_HNSWLIB_VERSION}"
 
 
