@@ -166,14 +166,18 @@ class PostsCollection:
                 f"{cls_name(self)} "
                 f"Empty content "
             )
-            return []
+            return 0, []
 
         _, embeddings = await self._create_embedding([post_text])
-        results = self.query_post(
-            query_embeddings=embeddings,
-            n_results=30,
-            include=["distances", "metadatas"]
-        )
+        try:
+            results = self.query_post(
+                query_embeddings=embeddings,
+                n_results=30,
+                include=["distances", "metadatas"]
+            )
+        except RuntimeError as e:
+            log.exception(e)
+            return 0, []
 
         for distance, metadata in zip(results["distances"][0], results["metadatas"][0]):
             if distance > 0.1:
