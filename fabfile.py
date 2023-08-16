@@ -61,7 +61,7 @@ def deploy(ctx, transfer=False):
 
     is_built, commit_hash = is_image_built()
     if not is_built:
-        log.info(f"No image is built for latest commit: {commit_hash}")
+        log.warning(f"Seems like image for latest commit hasn't been created yet, wait... hash: {commit_hash}")
         return
 
     log.info(f"Built for last commit is ready, latest commit hash: {commit_hash}")
@@ -142,7 +142,7 @@ def transfer_files(conn: Connection):
 def docker_pull(conn: Connection):
     # pull the latest images and run
     with conn.cd(DOCKER_HOME):
-        conn.run(f"docker pull {DOCKER_HUB_REPO_IMAGE}:latest")
+        conn.run(f"docker pull --platform='linux/amd64' {DOCKER_HUB_REPO_IMAGE}:latest")
 
 
 @task
@@ -219,7 +219,7 @@ def tar_and_transfer_directory(conn: Connection, local_dir: str, remote_dir: str
     conn.put("tmp.tar.gz", "/tmp/tmp.tar.gz")
 
     # On the remote server, extract the tar.gz file to the destination directory
-    conn.run(f"mkdir -p {remote_dir} && tar -xzf /tmp/tmp.tar.gz -C {remote_dir}")
+    conn.run(f"mkdir -p {remote_dir} && tar --ignore-command-error -xzf /tmp/tmp.tar.gz -C {remote_dir}")
 
     # Finally, clean up the temporary tar.gz file both locally and remotely
     os.remove("tmp.tar.gz")
