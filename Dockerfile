@@ -24,6 +24,14 @@ WORKDIR ./app
 COPY poetry.lock pyproject.toml ./
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
 
+# Re-install crhoma hnswlib because for some reason it fails with illegal instractions
+# as if it compiles for the wrong acrhitecture
+# TODO: Need to revisit
+RUN CHROMA_HNSWLIB_VERSION=$(poetry show -v | grep chroma-hnswlib | awk '{print $2}') &&  \
+    poetry run pip uninstall chroma-hnswlib &&  \
+    poetry run pip install chroma-hnswlib=="${CHROMA_HNSWLIB_VERSION}"
+
+
 COPY src src
 
 # Run the command to start your application
