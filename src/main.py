@@ -139,12 +139,6 @@ try:
             JobDescriptionsCheck(emitter=emitter),
             JobPostingParser(),
             Preprocessing(channel_sync_period=channel_sync_period),
-            # Utils(
-            #     # delete_posts_transient=False,
-            #     # delete_same_posts=True,
-            #     # log_posts_for_forwarding=True
-            # ),
-
             log_level="info",
             log_format="color",
             log_buffer_size=10,

@@ -48,6 +48,14 @@ class JobDescriptionsCheck(aiomisc.Service):
         )
     )
     async def gpt_check(self, text, prompt):
+        if not text and len(text.strip()) == 0:
+            # safety check
+            raise NotImplementedError
+
+        if not prompt and len(prompt.strip()) == 0:
+            # safety check
+            raise NotImplementedError
+
         async with self.rate_limit:
             chat_completions = await openai.ChatCompletion.acreate(
                 model="gpt-3.5-turbo-0613",
@@ -67,7 +75,7 @@ class JobDescriptionsCheck(aiomisc.Service):
             tokens_used = chat_completions['usage']['total_tokens']
             response = json.loads(chat_completions['choices'][0]['message']["content"])
             validate(response, filter_schema)
-            return tokens_used, response["is_matched"], response.get("reason", "")
+            return tokens_used, response["query_result"], response.get("reason", "")
 
     async def do_gpt_check(self, db, rows, post_id, prompt, prompt_id, index_distance, user_id):
         cursor = await safe_db_execute(db, GET_POST_BY_PID, [post_id])
@@ -88,10 +96,10 @@ class JobDescriptionsCheck(aiomisc.Service):
                 f"prid:{prompt_id} "
                 f"pid:{post_id} "
                 f"uid:{user_id} "
-                f"distance: {index_distance} \n"
-                f"prompt:'{shorten_text(prompt)}' \n"
-                f"text:'{shorten_text(post_text)}' \n"
-                f"reason:{reason} \n"
+                f"distance: {index_distance} "
+                f"prompt:'{shorten_text(prompt)}' "
+                f"text:'{shorten_text(post_text)}' "
+                f"reason:{reason} "
             )
 
             await safe_db_execute(
@@ -159,6 +167,12 @@ class JobDescriptionsCheck(aiomisc.Service):
                     key=lambda key: key[2]
                 )
             ))
+
+            if is_first_search:
+                self.emitter.emit("start_first_search", **{
+                    "user_id": user_id,
+                    "prompt_id": prompt_id,
+                })
 
             futures = [
                 self.do_gpt_check(
@@ -359,7 +373,7 @@ class JobDescriptionsCheck(aiomisc.Service):
                         f"distance:{distance:.4f} > {percentile_distance:.4f}"
                     )
 
-    async def on_new_approved_prompt(self):
+    async def on_new_approved_prompt(self, *args, **kwargs):
         async with self.lock:
             try:
                 async with aiosqlite.connect(SQLLite3Service.db_path) as db:

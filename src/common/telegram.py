@@ -339,6 +339,8 @@ class TelegramTextTools:
             parsed = urlparse(info["link"])
             content = None
 
+            # In case of early exit, for example wrong category - advertisment
+            if not info.get("description"): continue
             description = info["description"]
 
             if any([

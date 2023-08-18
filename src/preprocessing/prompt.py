@@ -35,8 +35,8 @@ class PromptTranslate(aiomisc.Service):
     lock: asyncio.Lock = None
 
     @aiomisc.asyncbackoff(
-        attempt_timeout=10,
-        deadline=20,
+        attempt_timeout=60,
+        deadline=60,
         pause=2,
         max_tries=10,
         exceptions=(
@@ -47,15 +47,17 @@ class PromptTranslate(aiomisc.Service):
     async def preprocess_prompt(self, prompt):
         enc = tiktoken.get_encoding("cl100k_base")
         num_tokens = len(enc.encode(get_prompt("prompt_check.txt") + prompt))
-        if num_tokens > 6000:
-            raise TokenLimitExceeded(num_tokens)
 
-        # if num_tokens > 1000:
-        #     raise TokenLimitExceeded(num_tokens)
+        model = "gpt-3.5-turbo-0613"
+        if num_tokens <= 400:
+            model = "gpt-4-0613"
+
+        if num_tokens >= 6000:
+            raise TokenLimitExceeded(num_tokens)
 
         async with self.rate_limit:
             chat_completions = await openai.ChatCompletion.acreate(
-                model="gpt-3.5-turbo-0613",
+                model=model,
                 temperature=0,
                 messages=[
                     {
@@ -109,7 +111,7 @@ class PromptTranslate(aiomisc.Service):
             f"num:{len(rows)} "
         )
 
-        for prompt, prompt_id in rows:
+        for prompt, prompt_id, user_id in rows:
             _, response = await self.preprocess_prompt(prompt)
             if not response:
                 continue
@@ -121,7 +123,7 @@ class PromptTranslate(aiomisc.Service):
                     f"prid:{prompt_id} "
                     f"prompt:'{shorten_text(prompt)}' "
                 )
-                await safe_db_execute(db, UPDATE_PROMPT, ['rejected', None, prompt_id])
+                await safe_db_execute(db, UPDATE_PROMPT, ['rejected', None, None, prompt_id])
                 await db.commit()
                 self.emitter.emit("prompt_rejected", **{
                     "prompt_id": prompt_id,
@@ -138,14 +140,19 @@ class PromptTranslate(aiomisc.Service):
             )
 
             tags = ",".join(response['position_tags_cloud'])
-            await safe_db_execute(db, UPDATE_PROMPT, ['approved', tags, prompt_id])
+            query_for_gpt = json.dumps(response['query'])
+
+            await safe_db_execute(db, UPDATE_PROMPT, ['approved', tags, query_for_gpt, prompt_id])
             _, embeddings = await self.create_embedding([tags])
             self.index_prompts.add(
                 embeddings=[embeddings[0]],
                 ids=[str(prompt_id)]
             )
             await db.commit()
-            self.emitter.emit("new_approved_prompt")
+            self.emitter.emit("new_approved_prompt", **{
+                "prompt_id": prompt_id,
+                "user_id": user_id
+            })
 
     async def sync_index_and_db(self, db):
         cursor = await safe_db_execute(db, COUNT_APPROVED_PROMPTS)
@@ -190,6 +197,13 @@ class PromptTranslate(aiomisc.Service):
 
         # IDs in index which are not in db
         mismatch_ids = sorted(list(set(index_ids) - set(prompts_map.keys())))
+        for n, _id in enumerate(mismatch_ids):
+            log.warning(
+                f'{cls_name(self)}: '
+                f'{n + 1}: Remove zombie prompt index, '
+                f"prompt_id: {_id} "
+            )
+
         if mismatch_ids:
             self.index_prompts.delete(ids=mismatch_ids)
 

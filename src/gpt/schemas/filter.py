@@ -4,9 +4,9 @@ schema = {
         "reason": {
             "type": "string"
         },
-        "is_matched": {
+        "query_result": {
             "type": "boolean"
         }
     },
-    "required": ["reason", "is_matched"],
+    "required": ["reason", "query_result"],
 }
