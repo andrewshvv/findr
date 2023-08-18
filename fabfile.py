@@ -66,11 +66,11 @@ def deploy(ctx, transfer=False):
 
     log.info(f"Built for last commit is ready, latest commit hash: {commit_hash}")
 
-    running_digest = get_running_image_digest(conn)
+    # running_id = get_running_image_id(conn)
     last_digest = get_last_docker_digest()
-    if running_digest == last_digest:
-        log.info(f"Last available image already running: {last_digest}")
-        return
+    # if running_id == last_digest: <==== id != digest
+    #     log.info(f"Last available image already running: {last_digest}")
+    #     return
 
     log.info(f"Found image {last_digest}, proceeding...")
 
@@ -134,8 +134,26 @@ def transfer_files(conn: Connection):
     conn.put("./.env", os.path.join(DOCKER_HOME, '.env'))
     log.info('Transferred .env ...')
 
-    tar_and_transfer_directory(conn, './chroma', os.path.join(DOCKER_HOME, 'chroma'))
+    upload_directory(conn, './chroma', os.path.join(DOCKER_HOME, 'chroma'))
     log.info('Transferred chroma...')
+
+
+@task
+def retrieve_db(ctx):
+    conn = connect()
+
+    local_db_path = "./db.sqlite"
+    if os.path.exists(local_db_path):
+        # Timestamp for the backup
+        timestamp = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        os.system(f"mv {local_db_path} {local_db_path}.bak.{timestamp}")
+        log.info(f'Created backup {local_db_path}.bak.{timestamp}')
+
+    conn.get(os.path.join(DOCKER_HOME, 'db.sqlite'), local_db_path)
+    log.info('Retrieved db.sqlite ...')
+
+    download_directory(conn, './chroma', os.path.join(DOCKER_HOME, 'chroma'))
+    log.info('Retrieved chroma ...')
 
 
 @task
@@ -151,6 +169,7 @@ def start_daemon(conn: Connection):
     with conn.cd(DOCKER_HOME):
         conn.run(f"docker pull {DOCKER_HUB_REPO_IMAGE}:latest")
         conn.run("docker compose up -d findr")
+
 
 @task
 def stop_daemon(ctx):
@@ -202,7 +221,7 @@ def is_image_built(commit_hash=None):
     return False, commit_hash
 
 
-def get_running_image_digest(conn):
+def get_running_image_id(conn):
     result = conn.run('docker ps --format "{{.Image}}"')
     if result.stdout.strip():
         digest = conn.run(f'docker inspect --format="{{{{.Id}}}}" {result.stdout.strip()}')
@@ -211,19 +230,43 @@ def get_running_image_digest(conn):
         return None
 
 
-def tar_and_transfer_directory(conn: Connection, local_dir: str, remote_dir: str):
+def upload_directory(conn: Connection, local_dir: str, remote_dir: str):
     # Create a tar.gz file of your directory
-    os.system(f"tar -czf tmp.tar.gz -C {local_dir} .")
+    os.system(f"tar -czf tmp.tar.gz -C {local_dir} /tmp")
 
     # Then use put() to upload the tar.gz file to the remote server
     conn.put("tmp.tar.gz", "/tmp/tmp.tar.gz")
 
     # On the remote server, extract the tar.gz file to the destination directory
-    conn.run(f"mkdir -p {remote_dir} && tar --ignore-command-error -xzf /tmp/tmp.tar.gz -C {remote_dir}")
+    conn.run(f"mkdir -p {remote_dir} && tar -xzf /tmp/tmp.tar.gz -C {remote_dir}")
 
     # Finally, clean up the temporary tar.gz file both locally and remotely
-    os.remove("tmp.tar.gz")
+    os.remove("/tmp/tmp.tar.gz")
     conn.run("rm /tmp/tmp.tar.gz")
+
+
+def download_directory(conn: Connection, local_dir: str, remote_dir: str):
+    try:
+        # Create a tar.gz file of remote directory in the /tmp folder
+        conn.run(f"tar -czf /tmp/tmp.tar.gz -C {remote_dir} .")
+
+        # download the tar.gz file from remote server to local server's /tmp directory
+        conn.get("/tmp/tmp.tar.gz", "/tmp/tmp.tar.gz")
+
+        if os.path.isdir(local_dir):
+            # Timestamp for the backup
+            timestamp = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+            os.system(f"mv {local_dir} {local_dir}.bak.{timestamp}")
+            log.info(f'Created backup {local_dir}.bak.{timestamp}')
+
+        # On the local server, extract the tar.gz file in the local directory
+        os.system(f"mkdir -p {local_dir} && tar -xzf /tmp/tmp.tar.gz -C {local_dir}")
+
+    finally:
+        # Finally, clean up the temporary tar.gz file both locally and remotely
+        if os.path.exists(f"/tmp/tmp.tar.gz"):
+            os.remove("/tmp/tmp.tar.gz")
+        conn.run("rm /tmp/tmp.tar.gz")
 
 
 def get_last_docker_digest():
