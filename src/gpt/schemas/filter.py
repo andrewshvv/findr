@@ -7,9 +7,6 @@ schema = {
         "query_result": {
             "type": "boolean"
         },
-        "executed_query": {
-            "type": "object"
-        }
     },
-    "required": ["reason", "query_result", "executed_query"],
+    "required": ["reason", "query_result"],
 }

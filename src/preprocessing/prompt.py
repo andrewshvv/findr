@@ -140,9 +140,9 @@ class PromptTranslate(aiomisc.Service):
             )
 
             tags = ",".join(response['position_tags_cloud'])
-            query_for_gpt = json.dumps(response['query'])
+            eli5_user_request = response['eli5']
 
-            await safe_db_execute(db, UPDATE_PROMPT, ['approved', tags, query_for_gpt, prompt_id])
+            await safe_db_execute(db, UPDATE_PROMPT, ['approved', tags, eli5_user_request, prompt_id])
             _, embeddings = await self.create_embedding([tags])
             self.index_prompts.add(
                 embeddings=[embeddings[0]],

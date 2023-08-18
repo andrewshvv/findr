@@ -26,7 +26,7 @@ GET_ACCEPTED_POSTS = f"""
 
 UPDATE_PROMPT = f"""
     UPDATE prompts 
-    SET status = ?, tags = ?, query = ?
+    SET status = ?, tags = ?, eli5 = ?
     WHERE prompt_id = ?
 """
 
@@ -73,7 +73,7 @@ GET_POSTS_FOR_PROCESSING = """
         SELECT
             prompt_id,
             user_id,
-            query as prompt,
+            eli5 as prompt,
             status,
             ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY prompts.date DESC) AS row_num
         FROM prompts
@@ -290,7 +290,7 @@ class SQLLite3Service(aiomisc.Service):
             active UINT,
             status TEXT,
             distance TEXT,
-            query TEXT
+            eli5 TEXT
         );
     """
 

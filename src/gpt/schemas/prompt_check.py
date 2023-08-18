@@ -10,13 +10,13 @@ schema = {
                 "type": "string",
             },
         },
-        "query": {
-            "type": "object"
+        "eli5": {
+            "type": "string"
         }
     },
     "required": [
         "is_a_job_search_request",
         "position_tags_cloud",
-        "query"
+        "eli5"
     ]
 }

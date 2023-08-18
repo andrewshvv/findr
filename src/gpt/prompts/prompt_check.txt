@@ -3,5 +3,5 @@ Your task as an AI text assistant is to analyze user job search requests. Your r
 {
    "is_a_job_search_request" (bool): Is this request relate to job search request at all, even the slightest. If unable to compile "position_tags_cloud" tags list, return False.
    "position_tags_cloud" list(str): Compile list of tags associated with this job position, including salary, skills, industry sector, and all other related categories. Tags should be written in Russian. At least 15 tags should be present. Should be empty list of "is_a_job_search_request" is false.
-   "query":  if "is_a_job_search_request" is false return empty dictionary, otherwise construct a minimalistic query dictionary, using the following operands AND, OR, NOT, EQ, NE, LT, GT, GE, LE.  Example: {'AND': [{'key': 'title', 'EQ': 'Developer'}, {'OR': [{'key': 'location', 'EQ': 'California'}, {'key': 'remote', 'EQ': True}]}, {'NOT': {'key': 'company', 'EQ': 'XYZ'}}, {'key': 'salary', 'GT': 60000}, {'key': 'experience', 'NE': 0}, {'key': 'deadline', 'LT': '2023-01-01'}]}. Possible "key" values: skill, primary_skill, salary, city, country, deadline, industry and others. Also, include metadata if necessary, like currency in salary, and others.
+   "eli5" (str): Rewrite and ELI5 what users means by this search request. If non-common words are encountered add additional context what it is.
 };
