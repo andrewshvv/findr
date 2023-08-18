@@ -102,7 +102,7 @@ GET_POSTS_FOR_PROCESSING = """
     SELECT
         active_prompts.prompt_id,
         active_prompts.prompt,
-        active_prompts.status,
+        active_prompts.status as prompt_status,
         recent_posts.post_id,
         active_prompts.user_id,
         users_posts.process_status,
