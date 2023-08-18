@@ -19,7 +19,9 @@ from common.logging import cls_name, shorten_text
 from common.utils import get_prompt, print_event, group_list
 from db.sqlite import SQLLite3Service, UPDATE_PROMPT, GET_PROMPTS_FOR_PROCESSING, GET_ALL_APPROVED_PROMPTS, \
     COUNT_APPROVED_PROMPTS
-from gpt.schemas.prompt_check import schema as json_preprocess_schema
+
+from gpt.schemas.prompt_check_short import schema as json_preprocess_schema_short
+from gpt.schemas.prompt_check_long import schema as json_preprocess_schema_long
 
 log = logging.getLogger(__name__)
 
@@ -46,11 +48,16 @@ class PromptTranslate(aiomisc.Service):
     )
     async def preprocess_prompt(self, prompt):
         enc = tiktoken.get_encoding("cl100k_base")
-        num_tokens = len(enc.encode(get_prompt("prompt_check.txt") + prompt))
+        num_tokens = len(enc.encode(prompt)) + 300  # approximate system message tokens
 
-        model = "gpt-3.5-turbo-0613"
         if num_tokens <= 400:
+            is_long = False
             model = "gpt-4-0613"
+            gpt_system_message = "prompt_check_short.txt"
+        else:
+            model = "gpt-3.5-turbo-0613"
+            is_long = True
+            gpt_system_message = "prompt_check_long.txt"
 
         if num_tokens >= 6000:
             raise TokenLimitExceeded(num_tokens)
@@ -62,7 +69,7 @@ class PromptTranslate(aiomisc.Service):
                 messages=[
                     {
                         "role": "system",
-                        "content": get_prompt("prompt_check.txt"),
+                        "content": get_prompt(gpt_system_message),
                     },
                     {
                         "role": "user",
@@ -85,8 +92,11 @@ class PromptTranslate(aiomisc.Service):
             return tokens_used, None
 
         pprint(json_response)
-        validate(json_response, json_preprocess_schema)
-        return tokens_used, json_response
+        if is_long:
+            validate(json_response, json_preprocess_schema_long)
+        else:
+            validate(json_response, json_preprocess_schema_short)
+        return tokens_used, json_response, is_long
 
     async def on_new_prompt(self, *args, **kwargs):
         async with self.lock:
@@ -112,7 +122,7 @@ class PromptTranslate(aiomisc.Service):
         )
 
         for prompt, prompt_id, user_id in rows:
-            _, response = await self.preprocess_prompt(prompt)
+            _, response, is_long = await self.preprocess_prompt(prompt)
             if not response:
                 continue
 
@@ -139,8 +149,15 @@ class PromptTranslate(aiomisc.Service):
                 f"tags:{','.join(response['position_tags_cloud'])} "
             )
 
-            tags = ",".join(response['position_tags_cloud'])
-            eli5_user_request = response['eli5']
+            if is_long:
+                # Long prompts should have enough context
+                tags = prompt
+                eli5_user_request = prompt
+            else:
+                # For short requests create cloud of tags for index,
+                # and eli5 explanation from GPT-3.5 from GPT-4
+                tags = ",".join(response['position_tags_cloud'])
+                eli5_user_request = response['eli5']
 
             await safe_db_execute(db, UPDATE_PROMPT, ['approved', tags, eli5_user_request, prompt_id])
             _, embeddings = await self.create_embedding([tags])
