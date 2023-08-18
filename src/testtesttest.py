@@ -262,7 +262,7 @@ class SomeService(aiomisc.Service):
 #         if not response:
 #             return
 #
-#         if not response["is_a_job_search_request"]:
+#         if not response["is_valid"]:
 #             log.warning(
 #                 f"{cls_name(self)}: "
 #                 f"Prompt rejected, not a job search request "

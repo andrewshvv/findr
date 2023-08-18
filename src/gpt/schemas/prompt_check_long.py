@@ -1,11 +1,11 @@
 schema = {
     "type": "object",
     "properties": {
-        "is_a_job_search_request": {
+        "is_valid": {
             "type": "boolean"
         }
     },
     "required": [
-        "is_a_job_search_request",
+        "is_valid",
     ]
 }

@@ -126,7 +126,7 @@ class PromptTranslate(aiomisc.Service):
             if not response:
                 continue
 
-            if not response["is_a_job_search_request"] or len(response['position_tags_cloud']) == 0:
+            if not response["is_valid"] or (not is_long and len(response.get('position_tags_cloud', 0)) == 0):
                 log.warning(
                     f"{cls_name(self)}: "
                     f"Prompt rejected, not a job search request "
@@ -146,7 +146,7 @@ class PromptTranslate(aiomisc.Service):
                 f"Prompt translate "
                 f"prid:{prompt_id} "
                 f"prompt:'{shorten_text(prompt)}' "
-                f"tags:{','.join(response['position_tags_cloud'])} "
+                f"tags:{','.join(response.get('position_tags_cloud', []))} "
             )
 
             if is_long:

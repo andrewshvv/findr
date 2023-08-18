@@ -117,8 +117,8 @@ try:
     with aiomisc.entrypoint(
             SQLLite3Service(
                 environment=os.getenv("ENV"),
-                # drop_user_posts=True,
-                # drop_prompts=True,
+                drop_user_posts=True,
+                drop_prompts=True,
                 # add_test_posts=True,
                 # add_test_prompts=True,
             ),

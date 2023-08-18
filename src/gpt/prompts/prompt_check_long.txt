@@ -1,5 +1,5 @@
 Your task as an AI text assistant is to analyze user job search requests. Your report should be presented as a JSON dictionary containing the following fields:
 
 {
-   "is_a_job_search_request" (bool): Is this request relate to job search request at all, even the slightest. If unable to compile "position_tags_cloud" tags list, return False.
+   "is_valid" (bool): Is this request related to a job search request at all, even the slightest, or maybe it is a resume, in this case then return true.
 };

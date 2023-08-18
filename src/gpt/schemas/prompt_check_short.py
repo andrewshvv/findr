@@ -1,7 +1,7 @@
 schema = {
     "type": "object",
     "properties": {
-        "is_a_job_search_request": {
+        "is_valid": {
             "type": "boolean"
         },
         "position_tags_cloud": {
@@ -15,7 +15,7 @@ schema = {
         }
     },
     "required": [
-        "is_a_job_search_request",
+        "is_valid",
         "position_tags_cloud",
         "eli5"
     ]
