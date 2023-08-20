@@ -121,8 +121,8 @@ class PromptTranslate(aiomisc.Service):
             f"num:{len(rows)} "
         )
 
-        for prompt, prompt_id, user_id in rows:
-            _, response, is_long = await self.preprocess_prompt(prompt)
+        for original_user_request, prompt_id, user_id in rows:
+            _, response, is_long = await self.preprocess_prompt(original_user_request)
             if not response:
                 continue
 
@@ -131,7 +131,7 @@ class PromptTranslate(aiomisc.Service):
                     f"{cls_name(self)}: "
                     f"Prompt rejected, not a job search request "
                     f"prid:{prompt_id} "
-                    f"prompt:'{shorten_text(prompt)}' "
+                    f"prompt:'{shorten_text(original_user_request)}' "
                 )
                 await safe_db_execute(db, UPDATE_PROMPT, ['rejected', None, None, prompt_id])
                 await db.commit()
@@ -145,22 +145,20 @@ class PromptTranslate(aiomisc.Service):
                 f"{cls_name(self)}: "
                 f"Prompt translate "
                 f"prid:{prompt_id} "
-                f"prompt:'{shorten_text(prompt)}' "
+                f"prompt:'{shorten_text(original_user_request)}' "
                 f"tags:{','.join(response.get('position_tags_cloud', []))} "
             )
 
-            if is_long:
-                # Long prompts should have enough context
-                tags = prompt
-                eli5_user_request = prompt
-            else:
+            for_index = None
+            for_gpt3 = None
+            if not is_long:
                 # For short requests create cloud of tags for index,
                 # and eli5 explanation from GPT-3.5 from GPT-4
-                tags = ",".join(response['position_tags_cloud'])
-                eli5_user_request = response['eli5']
+                for_index = ",".join(response['position_tags_cloud'])
+                for_gpt3 = response['eli5']
 
-            await safe_db_execute(db, UPDATE_PROMPT, ['approved', tags, eli5_user_request, prompt_id])
-            _, embeddings = await self.create_embedding([tags])
+            await safe_db_execute(db, UPDATE_PROMPT, ['approved', for_index, for_gpt3, prompt_id])
+            _, embeddings = await self.create_embedding([for_index])
             self.index_prompts.add(
                 embeddings=[embeddings[0]],
                 ids=[str(prompt_id)]

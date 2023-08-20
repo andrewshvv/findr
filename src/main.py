@@ -84,7 +84,7 @@ class Utils(aiomisc.Service):
                 await asyncio.sleep(5)
 
 
-channel_sync_period = 600
+channel_sync_period = 60 * 50
 if os.getenv("ENV") == "PROD":
     sentry_sdk.init(
         dsn="https://9c48edc997dc41ecaf95250328794ff2@o4505531915763712.ingest.sentry.io/4505531919892480",

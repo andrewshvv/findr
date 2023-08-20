@@ -47,18 +47,22 @@ class JobDescriptionsCheck(aiomisc.Service):
                 openai.error.ServiceUnavailableError,
         )
     )
-    async def gpt_check(self, text, prompt):
+    async def gpt_check(self, text, context_from_gpt4, original_user_request, model="gpt-3.5-turbo-0613"):
         if not text and len(text.strip()) == 0:
             # safety check
             raise NotImplementedError
 
-        if not prompt and len(prompt.strip()) == 0:
+        if not context_from_gpt4 and len(context_from_gpt4.strip()) == 0:
+            # safety check
+            raise NotImplementedError
+
+        if not original_user_request and len(original_user_request.strip()) == 0:
             # safety check
             raise NotImplementedError
 
         async with self.rate_limit:
             chat_completions = await openai.ChatCompletion.acreate(
-                model="gpt-3.5-turbo-0613",
+                model=model,
                 temperature=0,
                 messages=[
                     {
@@ -67,7 +71,12 @@ class JobDescriptionsCheck(aiomisc.Service):
                     },
                     {
                         "role": "user",
-                        "content": f"Job description:\n {text} \n\n User search request:\n {prompt}"
+                        "content": f"Job description / posting:\n"
+                                   f"{text}\n\n"
+                                   f"Original user search request:\n"
+                                   f"{original_user_request}\n\n"
+                                   f"Explanation of user search request:\n "
+                                   f"{context_from_gpt4}"
                     }
                 ]
             )
@@ -75,15 +84,18 @@ class JobDescriptionsCheck(aiomisc.Service):
             tokens_used = chat_completions['usage']['total_tokens']
             response = json.loads(chat_completions['choices'][0]['message']["content"])
             validate(response, filter_schema)
-            return tokens_used, response["query_result"], response.get("reason", "")
+            return tokens_used, response["score"] >= 90, response.get("reason", "")
 
-    async def do_gpt_check(self, db, rows, post_id, prompt, prompt_id, index_distance, user_id):
+    async def do_gpt_check(self, db, rows, post_id, context_from_gpt4, original_user_request, prompt_id, index_distance,
+                           user_id,
+                           model="gpt-3.5-turbo-0613"):
         cursor = await safe_db_execute(db, GET_POST_BY_PID, [post_id])
         row = await cursor.fetchone()
         if not row: raise NotImplementedError()
         (post_text,) = row
 
-        _, is_gpt_accepted, reason = await self.gpt_check(post_text, prompt)
+        _, is_gpt_accepted, reason = await self.gpt_check(post_text, context_from_gpt4, original_user_request,
+                                                          model=model)
         reason = reason.capitalize()
 
         rows[(post_id, prompt_id)]["process_status"] = "accepted" if is_gpt_accepted else "rejected"
@@ -97,7 +109,8 @@ class JobDescriptionsCheck(aiomisc.Service):
                 f"pid:{post_id} "
                 f"uid:{user_id} "
                 f"distance: {index_distance} "
-                f"prompt:'{shorten_text(prompt)}' "
+                f"context_from_gpt4:'{shorten_text(context_from_gpt4)}' "
+                f"original_user_request:'{shorten_text(original_user_request)}' "
                 f"text:'{shorten_text(post_text)}' "
                 f"reason:{reason} "
             )
@@ -124,14 +137,15 @@ class JobDescriptionsCheck(aiomisc.Service):
 
     async def find_matching_posts(self, db):
         rows = {
-            (row[3], row[0]): {
+            (row[4], row[0]): {
                 "prompt_id": row[0],
-                "prompt": row[1],
-                "prompt_status": row[2],
-                "post_id": row[3],
-                "user_id": row[4],
-                "process_status": row[5],
-                "index_distance": row[6],
+                "context_from_gpt4": row[1],
+                "original_user_request": row[2],
+                "prompt_status": row[3],
+                "post_id": row[4],
+                "user_id": row[5],
+                "process_status": row[6],
+                "index_distance": row[7],
             } async for row in await safe_db_execute(db, GET_POSTS_FOR_PROCESSING.format(days=CUTFOFF_DAYS))
         }
 
@@ -154,7 +168,8 @@ class JobDescriptionsCheck(aiomisc.Service):
         for (
                 user_id,
                 prompt_id,
-                prompt,
+                context_from_gpt4,
+                original_user_request,
                 is_all_rejected,
                 is_first_search,
                 post_ids,
@@ -179,10 +194,12 @@ class JobDescriptionsCheck(aiomisc.Service):
                     db=db,
                     rows=rows,
                     post_id=post_id,
-                    prompt=prompt,
+                    context_from_gpt4=context_from_gpt4,
+                    original_user_request=original_user_request,
                     prompt_id=prompt_id,
                     index_distance=index_distance,
-                    user_id=user_id
+                    user_id=user_id,
+                    model="gpt-3.5-turbo-0613"
                 )
                 for (n, (post_id, post_status, index_distance)) in posts
                 if post_status == 'index_approved'

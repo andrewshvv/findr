@@ -26,7 +26,7 @@ GET_ACCEPTED_POSTS = f"""
 
 UPDATE_PROMPT = f"""
     UPDATE prompts 
-    SET status = ?, tags = ?, eli5 = ?
+    SET status = ?, for_index = ?, for_gpt3 = ?
     WHERE prompt_id = ?
 """
 
@@ -73,7 +73,8 @@ GET_POSTS_FOR_PROCESSING = """
         SELECT
             prompt_id,
             user_id,
-            eli5 as prompt,
+            for_gpt3,
+            original,
             status,
             ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY prompts.date DESC) AS row_num
         FROM prompts
@@ -86,7 +87,8 @@ GET_POSTS_FOR_PROCESSING = """
         SELECT
                prompt_id,
                user_id,
-               prompt,
+               for_gpt3,
+               original,
                status
         FROM numbered_active_prompts
         WHERE row_num = 1
@@ -101,7 +103,8 @@ GET_POSTS_FOR_PROCESSING = """
 
     SELECT
         active_prompts.prompt_id,
-        active_prompts.prompt,
+        active_prompts.for_gpt3 as context_from_gpt4,
+        active_prompts.original as original_request,
         active_prompts.status as prompt_status,
         recent_posts.post_id,
         active_prompts.user_id,
@@ -111,10 +114,12 @@ GET_POSTS_FOR_PROCESSING = """
     LEFT JOIN users_posts
         ON  recent_posts.post_id = users_posts.post_id AND
             active_prompts.prompt_id = users_posts.prompt_id
-        WHERE
-            (users_posts.prompt_id IS NULL AND 
-            users_posts.post_id IS NULL AND 
-            TRIM(COALESCE(active_prompts.prompt, '')) <> '')
+        WHERE (
+                users_posts.prompt_id IS NULL AND 
+                users_posts.post_id IS NULL AND 
+                TRIM(COALESCE(active_prompts.original, '')) <> '' AND 
+                TRIM(COALESCE(active_prompts.for_gpt3, '')) <> ''
+            )
         -- OR
         --     users_posts.process_status = 'index_approved'
         ORDER BY recent_posts.post_id, active_prompts.user_id
@@ -170,7 +175,7 @@ WHERE status <> 'rejected'
 """
 
 GET_ALL_APPROVED_PROMPTS = """
-SELECT prompt_id, tags
+SELECT prompt_id, for_index
 FROM prompts
 WHERE status != 'rejected' AND status IS NOT NULL
 """
@@ -284,13 +289,13 @@ class SQLLite3Service(aiomisc.Service):
         CREATE TABLE IF NOT EXISTS prompts(
             prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER, 
-            tags TEXT,
+            for_index TEXT,
             original TEXT,
             date TEXT,
             active UINT,
             status TEXT,
             distance TEXT,
-            eli5 TEXT
+            for_gpt3 TEXT
         );
     """
 

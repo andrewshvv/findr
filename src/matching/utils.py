@@ -41,7 +41,8 @@ def group_user_data_for_gpt_check(rows):
     df = df.dropna(subset=[
         'user_id',
         'prompt_id',
-        'prompt',
+        'original_user_request',
+        'context_from_gpt4',
         'prompt_status',
         'post_id',
         'process_status',
@@ -52,7 +53,8 @@ def group_user_data_for_gpt_check(rows):
     grouped_df = df.groupby([
         'user_id',
         'prompt_id',
-        'prompt',
+        'original_user_request',
+        'context_from_gpt4',
         'prompt_status'
     ]).agg({
         'post_id': 'unique',
@@ -66,7 +68,8 @@ def group_user_data_for_gpt_check(rows):
     # Convert pandas series to lists
     user_ids = grouped_df['user_id'].astype(int).values.tolist()
     prompt_ids = grouped_df['prompt_id'].astype(int).values.tolist()
-    prompts = grouped_df['prompt'].values.tolist()
+    original_user_requests = grouped_df['original_user_request'].values.tolist()
+    contexts_from_gpt4 = grouped_df['context_from_gpt4'].values.tolist()
 
     is_first_search = [v == "approved" for v in grouped_df['prompt_status'].values.tolist()]
     is_all_rejected = [all([v == "rejected" for v in values]) for values in grouped_df['process_status'].values.tolist()]
@@ -78,7 +81,8 @@ def group_user_data_for_gpt_check(rows):
     return zip(
         user_ids,
         prompt_ids,
-        prompts,
+        contexts_from_gpt4,
+        original_user_requests,
         is_all_rejected,
         is_first_search,
 

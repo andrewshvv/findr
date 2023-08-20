@@ -1,6 +1,9 @@
 schema = {
     "type": "object",
     "properties": {
+        "language": {
+            "type": "string"
+        },
         "is_valid": {
             "type": "boolean"
         },
@@ -15,6 +18,7 @@ schema = {
         }
     },
     "required": [
+        "language",
         "is_valid",
         "position_tags_cloud",
         "eli5"

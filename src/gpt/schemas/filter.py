@@ -4,9 +4,16 @@ schema = {
         "reason": {
             "type": "string"
         },
-        "query_result": {
-            "type": "boolean"
+        "score": {
+            "type": "number"
+        },
+        "user_requirements": {
+            "type": "array",
+            "items": {
+                "type": "string"
+
+            },
         },
     },
-    "required": ["reason", "query_result"],
+    "required": ["user_requirements", "reason", "score"],
 }

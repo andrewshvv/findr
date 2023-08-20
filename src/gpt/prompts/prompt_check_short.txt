@@ -1,7 +1,8 @@
 Your task as an AI text assistant is to analyze user job search requests. Your report should be presented as a JSON dictionary containing the following fields:
 
 {
-   "is_valid" (bool): Is this request related to a job search request at all, even the slightest, or maybe it is a resume, in this case then return true. If unable to compile "position_tags_cloud" tags list, return False.
-   "position_tags_cloud" list(str): Compile list of tags associated with this job position, including salary, skills, industry sector, and all other related categories. Tags should be written in Russian. At least 15 tags should be present. Should be empty list of "is_valid" is false.
-   "eli5" (str): Rewrite and ELI5 what users means by this search request. If non-common words are encountered add additional context what it is.
+"language": the language of a user search request.
+"is_valid" (bool): If unable to compile "position_tags_cloud" tags list, return False. Is this request related to a job search request at all, even the slightest, or maybe it is a resume, in this case then return true.
+"position_tags_cloud" list(str): Should be an empty list of "is_valid" is false. Compile a list of tags associated with this job search request, including salary, skills, industry sector, and all other related categories. Tags should be written in Russian, but anglicisms are allowed. At least 15 tags should be present.
+"eli5" (str): Only English. Rewrite and ELI5 what users mean by this search request. If specific words are encountered add additional context to what it is. If the user has specified requirements in brackets, like "[python]" it means it should be explicitly mentioned in the job posting, make a point about it.
 };
