@@ -65,8 +65,6 @@ class Utils(aiomisc.Service):
         context = get_context()
         client = await context['tg_client']
 
-        # pprint(await get_channels_from_folder(client, "Test"))
-
         if self.delete_posts_transient:
             await self.clear_transient_channel(client)
 
