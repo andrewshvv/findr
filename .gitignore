@@ -16,6 +16,7 @@
 # Sqlite
 *.sqlite
 *.sqlite-journal
+*sqlite.bak*
 
 # Telethon
 *.session-journal
@@ -24,6 +25,7 @@
 
 # Embedding database
 *chroma
+*chroma.bak*
 
 # Parsing
 geckodriver.log
