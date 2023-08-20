@@ -102,19 +102,19 @@ def backup(conn: Connection):
         if conn.run('test -e ./telegram.session', warn=True).failed:
             log.warning('Can\'t backup telegram.session, file not found')
         else:
-            conn.run(f"cp ./telegram.session ./telegram.session.bak.{timestamp}")
+            conn.run(f"mv ./telegram.session ./telegram.session.bak.{timestamp}")
             log.info(f'Created backup telegram.session.bak.{timestamp}')
 
         if conn.run('test -e ./db.sqlite', warn=True).failed:
             log.warning('Can\'t backup db.sqlite, file not found')
         else:
-            conn.run(f"cp ./db.sqlite ./db.sqlite.bak.{timestamp}")
+            conn.run(f"mv ./db.sqlite ./db.sqlite.bak.{timestamp}")
             log.info(f'Created backup db.sqlite.bak.{timestamp}')
 
         if conn.run('test -e ./chroma', warn=True).failed:
             log.warning('Can\'t backup chroma directory, directory not found')
         else:
-            conn.run(f"cp -R ./chroma ./chroma.bak.{timestamp}")
+            conn.run(f"mv ./chroma ./chroma.bak.{timestamp}")
             log.info(f'Created backup chroma.bak.{timestamp}')
 
 
@@ -232,10 +232,10 @@ def get_running_image_id(conn):
 
 def upload_directory(conn: Connection, local_dir: str, remote_dir: str):
     # Create a tar.gz file of your directory
-    os.system(f"tar -czf tmp.tar.gz -C {local_dir} /tmp")
+    os.system(f"tar -czf /tmp/tmp.tar.gz -C {local_dir} .")
 
     # Then use put() to upload the tar.gz file to the remote server
-    conn.put("tmp.tar.gz", "/tmp/tmp.tar.gz")
+    conn.put("/tmp/tmp.tar.gz", "/tmp/tmp.tar.gz")
 
     # On the remote server, extract the tar.gz file to the destination directory
     conn.run(f"mkdir -p {remote_dir} && tar -xzf /tmp/tmp.tar.gz -C {remote_dir}")
