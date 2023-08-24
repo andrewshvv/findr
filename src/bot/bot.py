@@ -206,14 +206,55 @@ class TelegramBot(aiomisc.Service):
             finally:
                 await db.commit()
 
+    async def notify_users_about_rejected_prompts(self, db):
+        cursor = await db.cursor()
+
+        await safe_db_execute(
+            cursor,
+            """
+            SELECT 
+                prompts.user_id, 
+                prompts.prompt_id,
+                prompts.description
+            FROM prompts 
+            WHERE prompts.status = 'rejected'
+              AND prompts.active = 1
+            """
+        )
+
+        async for (
+                user_id,
+                prompt_id,
+                description
+        ) in cursor:
+            try:
+
+                await self.application.bot.send_message(
+                    chat_id=user_id,
+                    text='Мы не сможем подобрать тебе вакансию по твоему промпту, попробуй уточнить запрос',
+
+                )
+
+                log.info(
+                    f"{cls_name(self)} "
+                    f"Notify user about rejected prompt "
+                    f"prid:{prompt_id} "
+                    f"uid:{user_id} "
+                )
+            except Exception as e:
+                log.exception(e)
+            finally:
+                await db.commit()
+
     async def poll_db(self):
         while True:
             # check for new messages
             async with aiosqlite.connect(SQLLite3Service.db_path) as db:
                 async with self.lock:
                     await self.poll_db_forward_messages(db)
+                    await self.notify_users_about_rejected_prompts(db)
 
-            await asyncio.sleep(10)  # check every 10 seconds
+            await asyncio.sleep(20)  # check every 10 seconds
 
     async def handle_reveal_contact(self, update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
         query = update.callback_query
@@ -222,10 +263,7 @@ class TelegramBot(aiomisc.Service):
             await query.answer()
         except telegram.error.BadRequest as e:
             if "Query is too old and response" in str(e):
-                # TODO: Maybe send something to user, like try again?
-                # It happens when bot blocks or something like that
-                # and don't respond. Maybe we should think of
-                # why is that happening at all
+
                 pass
 
         parts = query.data.split("_")[-2:]
@@ -392,13 +430,13 @@ class TelegramBot(aiomisc.Service):
                 await db.commit()
                 self.emitter.emit("new_prompt")
             else:
-                # TODO: Which prompt entry is updated here?
+
                 await safe_db_execute(
                     cursor,
                     """
                         UPDATE prompts 
                         SET original = ?, date = ?, active = 1 
-                        WHERE user_id = ?
+                        WHERE user_id = ? ORDER BY DESC LIMIT 1
                     """, [message_text, date, user_id]
                 )
                 await db.commit()
@@ -409,35 +447,6 @@ class TelegramBot(aiomisc.Service):
         elif update.callback_query:
             await update.callback_query.message.reply_text(bot_texts.acknowledgment)
 
-        # TODO: All below can be safely removed?
-        await asyncio.sleep(60)
-
-        async with aiosqlite.connect(SQLLite3Service.db_path) as db:
-            cursor = await db.cursor()
-            await safe_db_execute(
-                cursor,
-                """
-                    SELECT *
-                    FROM USERS_POSTS 
-                    WHERE user_id = ? 
-                      AND prompt_id = ? 
-                      AND process_status != 'rejected'
-                    LIMIT 1
-                """, [user_id, prompt_id]
-            )
-            if await cursor.fetchone(): return
-
-            reply_text = "Пока мы не нашли ничего, что бы тебе подошло. \n" \
-                         "Попробуй изменить запрос или подожди еще чуть-чуть"
-            if update.message:
-                await update.message.reply_text(text=reply_text)
-            elif update.callback_query:
-                await update.callback_query.message.reply_text(text=reply_text)
-
-            log.info(
-                f"{cls_name(self)}: No suitable posts has been found "
-                f"prompt_id:{prompt_id} "
-            )
 
     async def parse_document(self, file_path: str) -> str:
         content = ""
@@ -447,8 +456,8 @@ class TelegramBot(aiomisc.Service):
                 doc = docx.Document(file_path)
                 for paragraph in doc.paragraphs:
                     content += paragraph.text + '\n'
-            except Exception as e:
-                # TODO: Losing precious stacktrace
+            except log.exception as e:
+
                 content = "Error parsing .docx file: " + str(e)
         elif file_path.endswith('.pdf'):
             try:
@@ -457,8 +466,9 @@ class TelegramBot(aiomisc.Service):
                     for page_num in range(reader.numPages):
                         page = reader.getPage(page_num)
                         content += page.extractText() + '\n'
-            except Exception as e:
-                # TODO: Losing precious stacktrace
+            except log.exception as e:
+
+
                 content = "Error parsing .pdf file: " + str(e)
 
         else:
@@ -690,8 +700,7 @@ class TelegramBot(aiomisc.Service):
                     return
 
                 if await TelegramBot.is_post_forwarded(cursor, post_id, prompt_id):
-                    # TODO: debug, instead of info
-                    log.info(
+                    log.debug(
                         f"{cls_name(self)}: "
                         f"Received event for already forwarded post, "
                         f"prompt_id: {prompt_id} "
@@ -798,8 +807,9 @@ class TelegramBot(aiomisc.Service):
                 f"user_id: {user_id} "
             )
 
-        # Update the database to set active = 0 for the user's last prompt
-        # TODO: Potential error? Double db connect?
+        # Update the database to set active = 0 for the user's last prompt st
+
+        # TODO: Potential error? Double db connect? I don't see it>>>
         async with aiosqlite.connect(SQLLite3Service.db_path) as db:
             cursor = await db.cursor()
             await safe_db_execute(
